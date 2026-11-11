@@ -30,5 +30,11 @@ peerDependencyRules:
     '@typescript-eslint/type-utils>eslint': '^9.0.0'
     '@typescript-eslint/utils>eslint': '^9.0.0'
 
-minimumReleaseAge: 0
+minimumReleaseAge: 1440
 
+trustPolicy: no-downgrade
+minimumReleaseAgeExclude:
+  # Renovate security update: vitest@4.1.11
+  - vitest@4.1.11
+  # Renovate security update: minimatch@11.0.1
+  - minimatch@11.0.1
