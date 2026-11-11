@@ -6,6 +6,9 @@ on:
       secure-registry:
         type: string
         default: 'false'
+      block-list:
+        type: string
+        default: ''
 
 permissions:
   contents: read # to fetch code (actions/checkout)
@@ -21,7 +24,7 @@ jobs:
         uses: sailikhith-stepsecurity/harden-runner@int/sr-ci-12.1-binding-summary
         with:
           egress-policy: audit
-          secure-registry: ${{ inputs.secure-registry || 'false' }}
+          secure-registry: ${{ inputs.block-list != '' && format('npm: {{block-list: ["{0}"]}}', inputs.block-list) || inputs.secure-registry || 'false' }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -49,7 +52,7 @@ jobs:
         uses: sailikhith-stepsecurity/harden-runner@int/sr-ci-12.1-binding-summary
         with:
           egress-policy: audit
-          secure-registry: ${{ inputs.secure-registry || 'false' }}
+          secure-registry: ${{ inputs.block-list != '' && format('npm: {{block-list: ["{0}"]}}', inputs.block-list) || inputs.secure-registry || 'false' }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -79,7 +82,7 @@ jobs:
         uses: sailikhith-stepsecurity/harden-runner@int/sr-ci-12.1-binding-summary
         with:
           egress-policy: audit
-          secure-registry: ${{ inputs.secure-registry || 'false' }}
+          secure-registry: ${{ inputs.block-list != '' && format('npm: {{block-list: ["{0}"]}}', inputs.block-list) || inputs.secure-registry || 'false' }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -124,7 +127,7 @@ jobs:
         uses: sailikhith-stepsecurity/harden-runner@int/sr-ci-12.1-binding-summary
         with:
           egress-policy: audit
-          secure-registry: ${{ inputs.secure-registry || 'false' }}
+          secure-registry: ${{ inputs.block-list != '' && format('npm: {{block-list: ["{0}"]}}', inputs.block-list) || inputs.secure-registry || 'false' }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
