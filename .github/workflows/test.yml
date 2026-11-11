@@ -1,9 +1,18 @@
 name: 'test'
 
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      secure-registry:
+        type: string
+        default: 'false'
+      lockfile:
+        type: string
+        default: keep
 
 permissions:
   contents: read # to fetch code (actions/checkout)
+  id-token: write # secure-registry session (OIDC)
 
 jobs:
   unit-test:
@@ -11,9 +20,20 @@ jobs:
     env:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
     steps:
+      - name: Harden-Runner
+        uses: sailikhith-stepsecurity/harden-runner@int/sr-ci-12.1-binding-summary
+        with:
+          egress-policy: audit
+          secure-registry: ${{ inputs.secure-registry }}
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Remove pnpm-lock.yaml (fresh resolve)
+        if: inputs.lockfile == 'fresh'
+        shell: bash
+        run: rm -f pnpm-lock.yaml
 
       - name: Install pnpm
         uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -22,9 +42,20 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: '.node-version'
-          cache: 'pnpm'
 
-      - run: pnpm install
+      - name: pnpm install
+        shell: bash
+        run: |
+          pnpm --version
+          pnpm config get registry
+          pnpm install ${{ inputs.lockfile == 'fresh' && '--no-frozen-lockfile' || '' }}
+
+      - name: Tarball hosts in pnpm-lock.yaml
+        shell: bash
+        run: |
+          echo "tarball entries: $(grep -c 'tarball:' pnpm-lock.yaml || true)"
+          grep -o 'tarball: https://[^/]*' pnpm-lock.yaml | sort | uniq -c || true
+          git diff --stat -- pnpm-lock.yaml || true
 
       - name: Run unit tests
         run: pnpm run test-unit
@@ -34,9 +65,20 @@ jobs:
     env:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
     steps:
+      - name: Harden-Runner
+        uses: sailikhith-stepsecurity/harden-runner@int/sr-ci-12.1-binding-summary
+        with:
+          egress-policy: audit
+          secure-registry: ${{ inputs.secure-registry }}
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Remove pnpm-lock.yaml (fresh resolve)
+        if: inputs.lockfile == 'fresh'
+        shell: bash
+        run: rm -f pnpm-lock.yaml
 
       - name: Install pnpm
         uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -45,9 +87,20 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: '.node-version'
-          cache: 'pnpm'
 
-      - run: pnpm install
+      - name: pnpm install
+        shell: bash
+        run: |
+          pnpm --version
+          pnpm config get registry
+          pnpm install ${{ inputs.lockfile == 'fresh' && '--no-frozen-lockfile' || '' }}
+
+      - name: Tarball hosts in pnpm-lock.yaml
+        shell: bash
+        run: |
+          echo "tarball entries: $(grep -c 'tarball:' pnpm-lock.yaml || true)"
+          grep -o 'tarball: https://[^/]*' pnpm-lock.yaml | sort | uniq -c || true
+          git diff --stat -- pnpm-lock.yaml || true
 
       - parallel:
           - name: Run compiler unit tests
@@ -59,9 +112,20 @@ jobs:
   e2e-test:
     runs-on: ubuntu-latest
     steps:
+      - name: Harden-Runner
+        uses: sailikhith-stepsecurity/harden-runner@int/sr-ci-12.1-binding-summary
+        with:
+          egress-policy: audit
+          secure-registry: ${{ inputs.secure-registry }}
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Remove pnpm-lock.yaml (fresh resolve)
+        if: inputs.lockfile == 'fresh'
+        shell: bash
+        run: rm -f pnpm-lock.yaml
 
       - name: Setup cache for Chromium binary
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -82,9 +146,20 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: '.node-version'
-          cache: 'pnpm'
 
-      - run: pnpm install
+      - name: pnpm install
+        shell: bash
+        run: |
+          pnpm --version
+          pnpm config get registry
+          pnpm install ${{ inputs.lockfile == 'fresh' && '--no-frozen-lockfile' || '' }}
+
+      - name: Tarball hosts in pnpm-lock.yaml
+        shell: bash
+        run: |
+          echo "tarball entries: $(grep -c 'tarball:' pnpm-lock.yaml || true)"
+          grep -o 'tarball: https://[^/]*' pnpm-lock.yaml | sort | uniq -c || true
+          git diff --stat -- pnpm-lock.yaml || true
       - run: node node_modules/puppeteer/install.mjs
       - run: pnpm exec playwright install chromium
 
@@ -99,9 +174,20 @@ jobs:
     env:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
     steps:
+      - name: Harden-Runner
+        uses: sailikhith-stepsecurity/harden-runner@int/sr-ci-12.1-binding-summary
+        with:
+          egress-policy: audit
+          secure-registry: ${{ inputs.secure-registry }}
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Remove pnpm-lock.yaml (fresh resolve)
+        if: inputs.lockfile == 'fresh'
+        shell: bash
+        run: rm -f pnpm-lock.yaml
 
       - name: Install pnpm
         uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -110,9 +196,20 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: '.node-version'
-          cache: 'pnpm'
 
-      - run: pnpm install
+      - name: pnpm install
+        shell: bash
+        run: |
+          pnpm --version
+          pnpm config get registry
+          pnpm install ${{ inputs.lockfile == 'fresh' && '--no-frozen-lockfile' || '' }}
+
+      - name: Tarball hosts in pnpm-lock.yaml
+        shell: bash
+        run: |
+          echo "tarball entries: $(grep -c 'tarball:' pnpm-lock.yaml || true)"
+          grep -o 'tarball: https://[^/]*' pnpm-lock.yaml | sort | uniq -c || true
+          git diff --stat -- pnpm-lock.yaml || true
 
       - parallel:
           - name: Run eslint
