@@ -16,6 +16,10 @@ on:
         type: choice
         options: ['false', 'true']
         default: 'false'
+      block-list:
+        description: 'npm block-list entry (pkg@version); turns secure-registry on with that block list'
+        type: string
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -31,6 +35,7 @@ jobs:
     uses: ./.github/workflows/test.yml
     with:
       secure-registry: ${{ inputs.secure-registry || 'false' }}
+      block-list: ${{ inputs.block-list || '' }}
 
   continuous-release:
     if: github.repository == 'vuejs/core'
